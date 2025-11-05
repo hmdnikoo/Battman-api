@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Robot Battery & Charging Dashboard (Demo)</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px; }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-6 { grid-column: span 6; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #eee; padding: 6px 8px; text-align: left; font-size: 14px; }
+    .kpi { font-size: 22px; font-weight: 700; }
+    .muted { color: #666; font-size: 12px; }
+    .pill { padding: 2px 8px; border-radius: 999px; font-size: 12px; display: inline-block; margin: 2px 0; }
+    .pill.info { background:#eef; }
+    .pill.warning { background:#ffe9b3; }
+    .pill.critical { background:#ffd6d6; }
+    .exports a { margin-right: 10px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h2>Robot Battery & Charging Dashboard <span class="muted">(dummy data)</span></h2>
+
+  <div class="exports muted">
+    Quick exports:
+    <a href="/api/export/robots.csv">robots.csv</a>
+    <a href="/api/export/chargers.csv">chargers.csv</a>
+    <a href="/api/export/queue.csv">queue.csv</a>
+    <a href="/api/export/soc-distribution.csv">soc-distribution.csv</a>
+    <a href="/api/export/avg-soc.csv?range=today">avg-soc.csv</a>
+    <a href="/api/export/energy.csv?days=14">energy-daily.csv</a>
+    <a href="/api/export/schedule.csv?hours=8">schedule.csv</a>
+    <a href="/api/export/telemetry.csv?robotId=R-01&hours=6">telemetry-R-01.csv</a>
+    <a href="/api/export/alerts.csv">alerts.csv</a>
+  </div>
+
+  <div class="grid">
+    <div class="card span-3"><div class="muted">Total Robots</div><div id="kpi-total" class="kpi">–</div></div>
+    <div class="card span-3"><div class="muted">Active</div><div id="kpi-active" class="kpi">–</div></div>
+    <div class="card span-3"><div class="muted">Charging</div><div id="kpi-charging" class="kpi">–</div></div>
+    <div class="card span-3"><div class="muted">Fleet Uptime</div><div id="kpi-uptime" class="kpi">–</div></div>
+
+    <div class="card span-4"><canvas id="statusChart" height="160"></canvas></div>
+    <div class="card span-4"><canvas id="socBucketsChart" height="160"></canvas></div>
+    <div class="card span-4"><canvas id="socPieChart" height="160"></canvas></div>
+
+    <div class="card span-6"><canvas id="avgSocChart" height="180"></canvas></div>
+    <div class="card span-6"><canvas id="energyChart" height="180"></canvas></div>
+
+    <div class="card span-6">
+      <h3>Charging Stations</h3>
+      <table id="chargersTable"><thead><tr><th>Station</th><th>Status</th><th>Robot</th></tr></thead><tbody></tbody></table>
+      <h4>Queue</h4>
+      <table id="queueTable"><thead><tr><th>Robot</th><th>SoC %</th><th>ETA (min)</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="card span-6">
+      <h3>Upcoming Charge Schedule (next 8h)</h3>
+      <table id="scheduleTable"><thead><tr><th>Robot</th><th>Station</th><th>Start</th><th>End</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="card span-12">
+      <h3>Robots</h3>
+      <table id="robotsTable"><thead><tr><th>Robot</th><th>State</th><th>SoC %</th><th>SoH %</th><th>Cycles</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="card span-8"><h3>Robot Telemetry</h3>
+      <div class="muted">Select a robot in the table to load its recent SoC/Voltage/Current/Temp</div>
+      <canvas id="robotTelemetryChart" height="200"></canvas>
+    </div>
+
+    <div class="card span-4">
+      <h3>Alerts</h3>
+      <div id="alerts"></div>
+      <div class="muted" id="powerNow"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
