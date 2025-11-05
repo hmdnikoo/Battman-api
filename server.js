@@ -269,7 +269,7 @@ app.get(BASE_PATH + '/api/export/telemetry.csv', (req,res)=>{
   sendCSV(res, `telemetry-${id}.csv`, rows);
 });
 
-app.get(BASE_PATH, (req, res) => {
+app.get([BASE_PATH, BASE_PATH + '/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
