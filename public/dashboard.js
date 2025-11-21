@@ -1,7 +1,7 @@
 async function j(url){ const r = await fetch(url); return r.json(); }
 function fmtDate(s){ const d = new Date(s); return d.toLocaleString(); }
 
-let statusChart, socBucketsChart, socPieChart, avgSocChart, energyChart, robotTelemetryChart;
+let statusChart, socBucketsChart, socPieChart, avgSocChart, energyChart, robotTelemetryChart, sohHistoryChart;;
 let baseUrl = '/battman-api/';
 async function loadKPIs(){
   const d = await j(baseUrl + '/api/fleet/summary');
@@ -18,6 +18,50 @@ async function loadStatus(){
   const data = d.buckets.map(b=>b.count);
   statusChart?.destroy();
   statusChart = new Chart(ctx, { type:'bar', data:{ labels, datasets:[{ label:'Robots', data }] }, options:{ plugins:{legend:{display:false}} } });
+}
+async function loadSohHistory(id) {
+  const d = await j(`/api/robots/${id}/soh-history`);
+  const ctx = document.getElementById('sohHistoryChart');
+
+  sohHistoryChart?.destroy();
+
+  sohHistoryChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: d.current.map(p => p.cycle),
+      datasets: [
+        {
+          label: 'Historical SOH (past)',
+          data: d.past.map(p => p.soh),
+          borderColor: 'red',
+          tension: 0.3
+        },
+        {
+          label: 'Observed SOH (current)',
+          data: d.current.map(p => p.soh),
+          borderColor: 'black',
+          tension: 0.3
+        },
+        {
+          label: 'AI optimized SOH (forecast)',
+          data: d.forecast.map(p => p.soh),
+          borderColor: 'green',
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      scales: {
+        y: {
+          title: { display: true, text: 'SOH (%)' },
+          min: 50, max: 100
+        },
+        x: {
+          title: { display: true, text: 'Equivalent Cycles' }
+        }
+      }
+    }
+  });
 }
 
 async function loadSoc(){
@@ -84,7 +128,7 @@ async function loadRobots(){
     tr.innerHTML = `<td><a href="#" data-id="${r.id}">${r.id}</a></td><td>${r.state}</td><td>${r.soc}</td><td>${r.soh}</td><td>${r.cycles}</td>`;
     body.appendChild(tr);
   });
-  body.querySelectorAll('a').forEach(a=> a.addEventListener('click', ev=>{ ev.preventDefault(); loadRobotTelemetry(ev.target.dataset.id); }));
+  body.querySelectorAll('a').forEach(a=> a.addEventListener('click', ev=>{ ev.preventDefault(); loadRobotTelemetry(ev.target.dataset.id); loadSohHistory(id);}));
 }
 
 async function loadRobotTelemetry(id){

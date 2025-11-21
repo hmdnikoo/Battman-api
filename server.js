@@ -276,6 +276,41 @@ app.get('/api/export/telemetry.csv', (req,res)=>{
   sendCSV(res, `telemetry-${id}.csv`, rows);
 });
 
+app.get('/api/robots/:id/soh-history', (req, res) => {
+  const id = req.params.id;
+
+  // fake cycle count (for demo)
+  let cycles = robotState.get(id)?.cycles ?? 300;
+
+  const past = [];
+  const current = [];
+  const forecast = [];
+
+  // Generate cycles from 0 → robot cycles
+  for (let c = 0; c <= cycles; c += 10) {
+
+    // RED — past historical degradation (worse)
+    const sohPast = Math.max(60, 100 - c * 0.12 + (rnd()*2 - 1));
+    past.push({ cycle: c, soh: Number(sohPast.toFixed(1)) });
+
+    // BLACK — current degradation after optimized charging (slightly better)
+    const sohCurrent = Math.max(65, 100 - c * 0.10 + (rnd()*1.5 - 0.7));
+    current.push({ cycle: c, soh: Number(sohCurrent.toFixed(1)) });
+
+    // GREEN — AI forecast (even better)
+    const sohFuture = Math.max(70, 100 - c * 0.075 + (rnd()*1.5 - 0.8));
+    forecast.push({ cycle: c, soh: Number(sohFuture.toFixed(1)) });
+  }
+
+  res.json({ 
+    robotId: id, 
+    past, 
+    current, 
+    forecast 
+  });
+});
+
+
 // ---- Start ----
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, ()=> console.log(`Robot dashboard server running at Port: ${PORT}`));
